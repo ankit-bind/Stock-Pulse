@@ -80,7 +80,7 @@ def _predict_series(model, name: str, df: pd.DataFrame, feature_cols: tuple[str,
 
 def _chart_explanation(title: str, what: str, why: str, how: str, verdict: str | None = None, benchmarks: str | None = None) -> None:
     """Render a beginner-friendly What/Why/How + Verdict + Benchmarks expander below a chart."""
-    with st.expander(f"📖 {title} — What, Why & How", expanded=False):
+    with st.expander(f"[INFO] {title} — What, Why & How", expanded=False):
         st.markdown(f"""
         **What:** {what}
 
@@ -91,13 +91,13 @@ def _chart_explanation(title: str, what: str, why: str, how: str, verdict: str |
         if verdict:
             st.markdown(f"""
             <div style="background-color: #1e293b; padding: 10px; border-radius: 8px; border-left: 4px solid #00d4ff;">
-            <strong>⚡ Quick Verdict:</strong> {verdict}
+            <strong>[VERDICT] Quick Verdict:</strong> {verdict}
             </div>
             """, unsafe_allow_html=True)
         if benchmarks:
             st.markdown(f"""
             <div style="background-color: #1e293b; padding: 10px; border-radius: 8px; border-left: 4px solid #10b981; margin-top: 8px;">
-            <strong>📊 Indian Market Benchmarks:</strong><br>
+            <strong>[DATA] Indian Market Benchmarks:</strong><br>
             {benchmarks}
             </div>
             """, unsafe_allow_html=True)
@@ -151,30 +151,30 @@ def show():
     # USER MODE: Simple / Advanced
     # ============================
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🎛️ User Mode")
+    st.sidebar.markdown("### [MODE] User Mode")
     user_mode = st.sidebar.radio(
         "",
-        ["🟢 Simple", "🔴 Advanced"],
+        ["[ON] Simple", "[OFF] Advanced"],
         index=0,
         horizontal=True,
         help="Simple: Beginner-friendly. Advanced: Full control."
     )
-    simple_mode = (user_mode == "🟢 Simple")
+    simple_mode = (user_mode == "[ON] Simple")
     
     # ============================
     # PRESETS
     # ============================
     if simple_mode:
-        st.sidebar.markdown("### ⚡ Quick Presets")
+        st.sidebar.markdown("### [VERDICT] Quick Presets")
         preset = st.sidebar.selectbox(
             "Choose a preset",
-            ["🟢 Beginner (Easy)", "🟡 Balanced (Standard)", "🔴 Aggressive (Pro)"],
+            ["[ON] Beginner (Easy)", "[MID] Balanced (Standard)", "[OFF] Aggressive (Pro)"],
             index=1,
             help="Beginner: Simplest settings. Balanced: Good defaults. Aggressive: Advanced features."
         )
         
         # Set defaults based on preset
-        if preset == "🟢 Beginner (Easy)":
+        if preset == "[ON] Beginner (Easy)":
             default_horizon = 1  # 60-day (index 1 in [20, 60])
             default_model = ["RandomForest"]
             default_signal = "Long only (flat below threshold)"
@@ -182,7 +182,7 @@ def show():
             default_cost = 0.001
             default_rf = False
             default_wf = "Single split (baseline)"
-        elif preset == "🟡 Balanced (Standard)":
+        elif preset == "[MID] Balanced (Standard)":
             default_horizon = 0  # 20-day (index 0 in [20, 60])
             default_model = ["RandomForest"]
             default_signal = "Long / short / flat (symmetric thresholds)"
@@ -211,7 +211,7 @@ def show():
 
     symbols = fetch_symbols()
     symbol = st.sidebar.selectbox(
-        "📊 Primary symbol",
+        "[DATA] Primary symbol",
         symbols,
         index=0 if symbols else None,
         help="Select the stock you want to analyze and predict."
@@ -221,10 +221,10 @@ def show():
     # SIMPLE MODE: Basic controls
     # ============================
     if simple_mode:
-        st.sidebar.markdown("### 🎚️ Basic Settings")
+        st.sidebar.markdown("### [BASIC] Basic Settings")
         
         model_names = st.sidebar.selectbox(
-            "🤖 Model",
+            "[AI] Model",
             options=list(trainers.keys()),
             index=0,
             help="Random Forest: Good all-rounder. XGBoost: Fast, accurate (if installed)."
@@ -232,14 +232,14 @@ def show():
         model_names = [model_names] if isinstance(model_names, str) else default_model
 
         target_horizon = st.sidebar.selectbox(
-            "📅 Prediction horizon",
+            "[TIME] Prediction horizon",
             options=[20, 60],
             index=default_horizon,
             help="20-day = 1 month ahead (moderate). 60-day = 3 months ahead (more predictable)."
         )
         
         signal_mode_label = st.sidebar.radio(
-            "📈 Signal style",
+            "[UP] Signal style",
             ["Long only", "Long & Short"],
             index=0 if "Long only" in default_signal else 1,
             horizontal=True,
@@ -251,7 +251,7 @@ def show():
             signal_mode = "long_short_flat"
 
         cost_pct = st.sidebar.slider(
-            "💰 Transaction cost",
+            "[COST] Transaction cost",
             min_value=0.0,
             max_value=0.01,
             value=default_cost,
@@ -282,7 +282,7 @@ def show():
     # ADVANCED MODE: All controls
     # ============================
     else:
-        st.sidebar.markdown("### 🔬 Advanced Settings")
+        st.sidebar.markdown("### [ADV] Advanced Settings")
         
         model_names = st.sidebar.multiselect(
             "Models",
@@ -736,7 +736,7 @@ def show():
                 what="Each bubble = one strategy. X-axis = worst loss (drawdown), Y-axis = annual return (CAGR). Bubble size = Sharpe ratio (risk-adjusted return).",
                 why="Helps you pick the best strategy quickly. Top-left = high return + low risk = ideal. Green = positive return, Red = negative.",
                 how="Compare ML strategies against Buy & Hold and SMA. If a bubble is bigger and higher than others, that strategy wins.",
-                verdict="🟢 If ML bubble is top-left: AI is winning. 🔴 If ML is bottom-right: Buy & Hold was better.",
+                verdict="[ON] If ML bubble is top-left: AI is winning. [OFF] If ML is bottom-right: Buy & Hold was better.",
                 benchmarks="Nifty 50 ~12% CAGR, Max DD ~30% | Good: CAGR >15%, Sharpe >1.0 | Excellent: CAGR >20%, Sharpe >1.5, Max DD <20%"
             )
     if not comp.empty:
@@ -786,7 +786,7 @@ def show():
             what="Shows how much money each strategy made over time. Starting from ₹0. +20% = ₹100 became ₹120.",
             why="You want the line that goes UP the most. Steeper = better returns. Also check if ML (solid line) beats Buy & Hold (dotted line).",
             how="If the ML line (solid) is above the dotted line, the AI model is beating simply holding the stock. If below, Buy & Hold was better.",
-            verdict="🟢 ML line above dotted = AI is making money. 🔴 Below = Better to just buy and hold. 🟡 Same = No advantage.",
+            verdict="[ON] ML line above dotted = AI is making money. [OFF] Below = Better to just buy and hold. [MID] Same = No advantage.",
             benchmarks="1 year: Nifty 50 ~12% | 3 years: Nifty 50 ~45% | Good: ML beats Nifty by 3%+ | Excellent: ML beats Nifty by 10%+"
         )
 
@@ -798,7 +798,7 @@ def show():
             what="Shows what values the ML model predicted. Each bar = how many predictions fell in that range.",
             why="A good model should make predictions across the range (not just one value). Wide spread = model is confident and varying.",
             how="If all bars are in one spot, the model is too conservative. If spread out, it is actively making different predictions each day.",
-            verdict="🟢 Wide spread = Active model, varying predictions. 🔴 Single peak = Model is too cautious, not useful.",
+            verdict="[ON] Wide spread = Active model, varying predictions. [OFF] Single peak = Model is too cautious, not useful.",
             benchmarks="Good: Multiple peaks across range | Bad: 80% predictions in one bar | Ideal: Bell-shaped curve centered around zero"
         )
 
@@ -810,7 +810,7 @@ def show():
         what="IC = correlation between the model's prediction and the actual next-day return. Range: -1 to +1. +0.05 = weak positive, +0.20 = strong.",
         why="You want the line to stay ABOVE zero. Positive IC = the model is directionally correct. Negative = the model is wrong most of the time.",
         how="If IC is consistently positive (green-ish), the model is useful. If it oscillates around zero, predictions are no better than random.",
-        verdict="🟢 Consistently >0.05 = Model has edge. 🟡 Around 0 = Random guesses. 🔴 Mostly negative = Model is backwards, FLIP the signals!",
+        verdict="[ON] Consistently >0.05 = Model has edge. [MID] Around 0 = Random guesses. [OFF] Mostly negative = Model is backwards, FLIP the signals!",
         benchmarks="Weak: 0.02-0.05 | Good: 0.05-0.10 | Strong: 0.10-0.20 | Excellent: >0.20 | IC × √252 > 1.0 = Excellent"
     )
 
@@ -834,7 +834,7 @@ def show():
         what="Shows how much you lost from the highest point. -10% means you are 10% below your peak. Also called 'underwater'.",
         why="You want the line to stay CLOSE to zero. Deep drops = scary losses. Long underwater periods = the strategy is stuck in losses.",
         how="Compare ML drawdown vs Buy & Hold. If ML drops less than Buy & Hold, it is protecting your money better.",
-        verdict="🟢 Max DD <20% = Safe. 🟡 20-30% = Manageable but watch. 🔴 >30% = Too risky for most beginners. 🔴 >50% = Avoid!",
+        verdict="[ON] Max DD <20% = Safe. [MID] 20-30% = Manageable but watch. [OFF] >30% = Too risky for most beginners. [OFF] >50% = Avoid!",
         benchmarks="Conservative: <15% | Moderate: 15-25% | Aggressive: 25-35% | Dangerous: >35% | Nifty 50 worst: ~35% (2020)"
     )
 
@@ -855,7 +855,7 @@ def show():
                 what="Shows which data points the model used most to make predictions. Higher bar = more important feature.",
                 why="Helps you understand WHY the model made decisions. If RSI is top, the model is using momentum. If SMA is top, it is using trends.",
                 how="Top features = what the AI cares about. If you understand those, you can trust the model more. If they look random, be cautious.",
-                verdict="🟢 Top 3 features are technical indicators (RSI, SMA, MACD) = Model is logical. 🔴 Random features on top = May be overfitting.",
+                verdict="[ON] Top 3 features are technical indicators (RSI, SMA, MACD) = Model is logical. [OFF] Random features on top = May be overfitting.",
                 benchmarks="Top feature should have >15% importance | Top 3 should cover >50% combined | If >10 features have similar importance = Model is confused"
             )
             
@@ -872,7 +872,7 @@ def show():
                         what="Shows how consistent the feature importance is across different training periods.",
                         why="Low std = the model is stable and reliable. High std = the model changes its mind about what matters, which is risky.",
                         how="If the same features stay on top across all folds, the model has a clear strategy. If they jump around, it may be overfitting.",
-                        verdict="🟢 Low std (<5%) = Stable, reliable model. 🔴 High std (>15%) = Model keeps changing its mind = Unstable.",
+                        verdict="[ON] Low std (<5%) = Stable, reliable model. [OFF] High std (>15%) = Model keeps changing its mind = Unstable.",
                         benchmarks="Excellent: Std <3% | Good: 3-8% | Acceptable: 8-15% | Warning: 15-25% | Dangerous: >25%"
                     )
 
@@ -1022,7 +1022,7 @@ def show():
                         what="Combines multiple stocks into one portfolio. Each stock gets its own AI model. Returns are blended together.",
                         why="Diversification reduces risk. If one stock fails, others may win. Portfolio > single stock for safety.",
                         how="Equal weight = same ₹ in each stock. Inverse vol = more money in stable stocks, less in volatile ones.",
-                        verdict="🟢 Portfolio smoother than single stock = Diversification working. 🔴 Portfolio worse than single stock = Models not good enough.",
+                        verdict="[ON] Portfolio smoother than single stock = Diversification working. [OFF] Portfolio worse than single stock = Models not good enough.",
                         benchmarks="Portfolio should have lower Max DD than average single stock | Good: Sharpe >1.0 with 5+ stocks | Ideal: 8-15 stocks for diversification"
                     )
                     styled_panel = (panel.tail(8).style
@@ -1194,7 +1194,7 @@ def show():
                                     what="Shows what fraction of stocks had valid predictions on each day. 100% = all stocks predicted.",
                                     why="Low coverage = many missing predictions. High coverage = AI is confident about most stocks.",
                                     how="If coverage drops, the model may lack data. If stable, the model is reliable across all symbols.",
-                                    verdict="🟢 >90% = Excellent. 🟡 70-90% = Good. 🔴 <70% = Too many gaps, reduce stock count or check data.",
+                                    verdict="[ON] >90% = Excellent. [MID] 70-90% = Good. [OFF] <70% = Too many gaps, reduce stock count or check data.",
                                     benchmarks="Excellent: >95% | Good: 80-95% | Acceptable: 60-80% | Poor: <60% | If coverage drops on recent dates = Model needs more data"
                                 )
                                 avg_ic_p = float(ic_daily.mean(skipna=True)) if len(ic_daily) else float("nan")
@@ -1243,7 +1243,7 @@ def show():
                             what="Shows how the combined panel strategy performed over time. Long/short portfolio across all selected stocks.",
                             why="Panel ML is more advanced — it uses all stocks together. Better for professionals. Should be compared to single-stock strategies.",
                             how="If the line goes up steadily, the cross-sectional approach is working. Sharp drops = too much risk or wrong stock selection.",
-                            verdict="🟢 Steady upward slope = Strategy is working. 🔴 Volatile with drops = Reduce leverage or increase stock count. 🟡 Flat = No edge, try different model.",
+                            verdict="[ON] Steady upward slope = Strategy is working. [OFF] Volatile with drops = Reduce leverage or increase stock count. [MID] Flat = No edge, try different model.",
                             benchmarks="Panel ML target: Sharpe >1.2, CAGR >15% | Long/short should have lower Max DD than long-only | If underperforms Nifty 50, stick to single-stock strategies"
                         )
 
@@ -1284,7 +1284,7 @@ def show():
                     what="Shows how much stocks move together. +1.00 = perfect sync (if A rises, B rises). -1.00 = opposite. 0 = no relation.",
                     why="High correlation = portfolio is not diversified. Low correlation = better diversification. You want some low correlations for safety.",
                     how="If all boxes are dark red, all stocks move together — risky. If mixed colors, portfolio is diversified.",
-                    verdict="🟢 Average correlation <0.6 = Well diversified. 🔴 Average >0.8 = All stocks move together = Not really diversified. 🟡 0.6-0.8 = Moderate diversification.",
+                    verdict="[ON] Average correlation <0.6 = Well diversified. [OFF] Average >0.8 = All stocks move together = Not really diversified. [MID] 0.6-0.8 = Moderate diversification.",
                     benchmarks="Excellent: Avg <0.5 | Good: 0.5-0.7 | Acceptable: 0.7-0.8 | Warning: 0.8-0.9 | Dangerous: >0.9 | Indian IT stocks (TCS, INFY) often correlate >0.7"
                 )
             except ValueError as e:

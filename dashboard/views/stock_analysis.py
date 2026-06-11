@@ -14,10 +14,10 @@ from dashboard.services.portfolio_service import build_symbol_returns_panel, com
 TRADING_DAYS_PER_YEAR = 252
 
 def _chart_explanation(text: str) -> None:
-    st.info(f"📊 **Chart Guide:** {text}")
+    st.info(f"**Chart Guide:** {text}")
 
 def _chart_data_table(df: pd.DataFrame, n: int = 5) -> None:
-    st.caption("📋 Recent Data Points")
+    st.caption("Recent Data Points")
     st.dataframe(df.tail(n).style.format({
         "close_price": "{:.2f}",
         "daily_return": "{:.4f}",
@@ -27,7 +27,7 @@ def _chart_data_table(df: pd.DataFrame, n: int = 5) -> None:
     }), use_container_width=True)
 
 def _chart_insights(**metrics) -> None:
-    st.markdown("### 🎯 Key Insights")
+    st.markdown("### Key Insights")
     cols = st.columns(min(len(metrics), 4))
     for i, (label, value) in enumerate(metrics.items()):
         with cols[i % len(cols)]:
@@ -148,7 +148,7 @@ def show():
             )
         return
 
-    st.sidebar.markdown("### 📊 Analysis Settings")
+    st.sidebar.markdown("### Analysis Settings")
     selected_symbol = st.sidebar.selectbox(
         "Select Stock",
         symbols,
@@ -182,7 +182,7 @@ def show():
         help="Analysis end date."
     )
 
-    st.sidebar.markdown("#### 🎚️ Strategy Parameters")
+    st.sidebar.markdown("#### Strategy Parameters")
     sma_short_n = st.sidebar.slider(
         "Short SMA",
         5, 50, 20,
@@ -249,29 +249,29 @@ def show():
         
     st.markdown(
         f"<div style='font-size:1.4rem; font-weight:600; color:#e2e8f0; "
-        f"letter-spacing:0.01em; margin-bottom:0.5rem;'>📈 "
+        f"letter-spacing:0.01em; margin-bottom:0.5rem;'>[Chart] "
         f"<span style='color:#00d4ff;'>{selected_symbol}</span> "
         f"<span style='color:#94a3b8; font-weight:400;'>Analysis</span></div>",
         unsafe_allow_html=True,
     )
 
     # Beginner help
-    with st.expander("📖 How to read this page (click to learn)", expanded=False):
+    with st.expander("How to read this page (click to learn)", expanded=False):
         st.markdown("""
-        **📊 Key Metrics:**
+        **Key Metrics:**
         - **Price Δ**: Latest close price + change from previous day
         - **RSI(14)**: 0-100 scale. <30 = oversold (may bounce up), >70 = overbought (may fall)
         - **SMA Signal**: LONG = buy, FLAT = sell, NEUTRAL = hold
         - **Strategy CAGR**: Annual return of the SMA crossover strategy
         
-        **📈 Charts:**
+        **Charts:**
         - **Candlestick**: Green = price up, Red = price down
         - **Blue line**: Short SMA (fast, 20 days)
         - **Orange line**: Long SMA (slow, 50 days)
         - **Green triangles**: BUY signals (short crossed above long)
         - **Red triangles**: SELL signals (short crossed below long)
         
-        **⚙️ Strategy:**
+        **Strategy:**
         - Buys when short SMA crosses above long SMA
         - Sells when short SMA crosses below long SMA
         - Transaction costs reduce returns
@@ -315,7 +315,7 @@ def show():
         )
         st.markdown(cards_html, unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📊 Overview", "⚙️ Strategy", "💼 Portfolio"])
+    tab1, tab2, tab3 = st.tabs(["Overview", "Strategy", "Portfolio"])
 
     with tab1:
         st.subheader("Price Action & Technicals")
