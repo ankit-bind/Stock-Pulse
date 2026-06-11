@@ -89,7 +89,7 @@ def ingest_csv_files():
             logger.info("Skipping non-CSV: %s", file)
             continue
 
-        # SKIP LOGIC
+        # 🔥 SKIP LOGIC
         if already_processed(file):
             logger.info("Skipping already processed file: %s", file)
             continue
