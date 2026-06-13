@@ -287,6 +287,8 @@ Stock-Pulse/
 │   ├── views/                    # Dashboard pages
 │   │   ├── stock_analysis.py     # Technical analysis view
 │   │   └── ml_strategy.py        # ML strategy view
+│   ├── components/               # Reusable UI components
+│   ├── config/                   # Dashboard config
 │   ├── styles/                   # Chart themes
 │   │   ├── chart_theme.py        # Plotly theme
 │   │   └── tokens.py             # Color tokens
@@ -302,7 +304,8 @@ Stock-Pulse/
 │
 ├── data_sources/                 # Raw CSV files
 │   ├── incoming_csv/             # New CSV files
-│   └── processed_archive/        # Processed files
+│   ├── processed_archive/        # Processed files
+│   └── rejected/                 # Failed/invalid CSV files
 │
 ├── tests/                        # Unit tests
 │   ├── test_prediction_models.py
@@ -313,16 +316,21 @@ Stock-Pulse/
 │   └── generate_architecture.py
 │
 ├── configuration/                # Config files
-│   └── .env                      # Environment variables
+│   ├── .env                      # Environment variables
+│   └── env.example               # Example environment file
 │
 ├── warehouse/                    # Data Warehouse (Medallion Architecture)
 │   ├── schema_definitions/
 │   │   ├── bronze_schema.sql     # Raw data layer
 │   │   ├── silver_schema.sql     # Standardized layer
 │   │   └── gold_schema.sql       # Feature-engineered layer
-│   └── procedures/
-│       ├── load_bronze_to_silver.sql
-│       └── load_silver_to_gold.sql
+│   ├── procedures/
+│   │   ├── load_bronze_to_silver.sql
+│   │   └── load_silver_to_gold.sql
+│   └── seed_data/
+│
+├── .streamlit/                   # Streamlit config
+│   └── config.toml               # Theme and UI settings
 │
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
