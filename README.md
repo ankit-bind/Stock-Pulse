@@ -146,6 +146,19 @@ Stored procedures handle the transitions:
 - `load_bronze_to_silver.sql` — Cleans and standardizes raw data
 - `load_silver_to_gold.sql` — Engineers features and targets
 
+## Architecture Diagram
+
+![Stock-Pulse Architecture](docs/architecture_diagram.png)
+
+**Architecture Overview:**
+1. **Data Sources** — CSV files with OHLCV data for Indian stocks
+2. **ETL Pipeline** — Bronze -> Silver -> Gold layers with standardization
+3. **Data Warehouse** — SQL Server (production) or SQLite (local demo)
+4. **Feature Engineering** — Technical indicators (RSI, MACD, SMA), causal targets
+5. **ML Prediction** — RandomForest / XGBoost with walk-forward validation
+6. **Portfolio** — Equal-weight, inverse-vol, cost-aware execution, beta-neutral options
+7. **Dashboard** — Streamlit with Plotly visualizations, simple and advanced modes
+
 ## ML Pipeline
 
 ### 1. Data Ingestion (`etl/ingestion/csv_ingestion.py`)
