@@ -455,6 +455,25 @@ Tested on **TCS.NS** with 2,776 rows of historical data:
 
 ---
 
+## Screenshots
+
+### Stock Analysis Page
+Technical analysis with candlestick charts, SMA overlays, RSI/MACD indicators, and buy/sell signals.
+
+![Stock Analysis](docs/screenshots/stock_analysis.png)
+
+### ML Strategy Page
+Walk-forward backtesting with cumulative returns, risk metrics, and chart explanations.
+
+![ML Strategy](docs/screenshots/ml_strategy.png)
+
+### Portfolio Builder
+Multi-stock portfolio analysis with correlation heatmaps.
+
+![Portfolio](docs/screenshots/portfolio.png)
+
+---
+
 ## Author
 
 **Ankit**
