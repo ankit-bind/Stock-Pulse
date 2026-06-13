@@ -458,8 +458,7 @@ Tested on **TCS.NS** with 2,776 rows of historical data:
 ## Author
 
 **Ankit**
-- Project: Stock-Pulse
-- Version: 1.0
+- Email: itz.ankitbind01@gmail.com
 
 ---
 
