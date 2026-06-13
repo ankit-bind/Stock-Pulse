@@ -458,7 +458,6 @@ Tested on **TCS.NS** with 2,776 rows of historical data:
 ## Author
 
 **Ankit**
-- GitHub: https://github.com/ankit-bind
 - Project: Stock-Pulse
 - Version: 1.0
 
