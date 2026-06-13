@@ -1,197 +1,412 @@
 # Stock-Pulse
 
-> AI-powered Indian stock prediction dashboard with ML walk-forward backtesting, technical analysis, and beginner-friendly controls.
-
-Stock-Pulse is an end-to-end quantitative research and ML portfolio system for Indian equities. It covers the full pipeline: **ETL -> Features -> ML -> Signals -> Portfolio -> Evaluation**, with causal execution, transaction costs, and cross-sectional books suitable for production-style backtests.
+> An end-to-end quantitative research and ML portfolio system for Indian equities — combining walk-forward machine learning, technical analysis, causal backtesting, and an interactive Streamlit dashboard for retail investors and quantitative researchers.
 
 ---
 
 ## Table of Contents
 
-1. [Features](#features)
-2. [Tech Stack](#tech-stack)
-3. [Quick Start](#quick-start)
-4. [Database Setup](#database-setup)
-5. [Dashboard Views](#dashboard-views)
-6. [How to Read Results](#how-to-read-results)
-7. [Architecture](#architecture)
-8. [Screenshots](#screenshots)
-9. [Running Tests](#running-tests)
+- [Overview](#overview)
+- [Problem Statement](#problem-statement)
+- [Project Goals](#project-goals)
+- [Dashboard Pages](#dashboard-pages)
+- [Project Architecture](#project-architecture)
+- [ML Pipeline](#ml-pipeline)
+- [Key Features Engineered](#key-features-engineered)
+- [Model Evaluation Metrics](#model-evaluation-metrics)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Setup & Installation](#setup--installation)
+- [Running the App](#running-the-app)
+- [Configuration](#configuration)
+- [Author](#author)
 
 ---
 
-## Features
+## Overview
 
-### Core Capabilities
-- **ML Strategy Engine** - Walk-forward validation with RandomForest and optional XGBoost
-- **Technical Analysis** - SMA, RSI, MACD, candlestick charts with real-time signals
-- **Backtesting** - Chronological validation, next-bar execution, transaction cost modeling
-- **Portfolio Construction** - Equal-weight, inverse-volatility, and cross-sectional ML portfolios
-- **Risk Metrics** - Sharpe ratio, CAGR, max drawdown, underwater curves, rolling IC
+**Stock-Pulse** is a production-grade AI decision-support system built for Indian stock market participants. It ingests historical OHLCV data, engineers causal time-series features, trains walk-forward ML models (RandomForest, XGBoost), and produces **predicted return signals**, **strategy positions**, and **risk-adjusted portfolio metrics** — all explainable via feature importance and interactive visualizations.
 
-### User Experience
-- **Simple Mode** - Beginner-friendly interface with 4 essential controls
-- **Advanced Mode** - Full control for quantitative researchers and professionals
-- **Quick Presets** - One-click setup: Beginner (Easy), Balanced (Standard), Aggressive (Pro)
-- **Inline Help** - Tooltips on every control, chart explanations (What / Why / How) with verdicts and benchmarks
-- **Indian Market Focus** - INR currency, Nifty 50 stocks, local brokerage cost assumptions
+The system is deployed as a **multi-page Streamlit web application** with support for single-stock technical analysis, ML strategy backtesting with transaction costs, cross-sectional portfolio construction, and real-time strategy comparison against SMA benchmarks.
 
-### Prediction Models
-| Model | Description | Use Case |
-|-------|-------------|----------|
-| RandomForest | Robust ensemble, good default | All skill levels |
-| XGBoost | Gradient boosting, fast and accurate | If installed, for pros |
+---
 
-### Prediction Horizons
-| Horizon | Timeframe | Best For |
-|---------|-----------|----------|
-| 1-day | Next day | High frequency, noisy |
-| 20-day | 1 month ahead | Balanced signal |
-| 60-day | 3 months ahead | Most predictable, beginner recommended |
+## Problem Statement
+
+Retail investors and small quantitative traders in India face several challenges when applying machine learning to stock trading:
+
+- **Overfitting risk** — Most ML models are trained on full history and tested on the same data, leading to inflated performance that collapses in live trading
+- **No causal validation** — Models often use future information accidentally (lookahead bias), making backtests unreliable
+- **High complexity** — Existing quant platforms require coding knowledge and statistical expertise, alienating beginners
+- **Poor interpretability** — Black-box predictions without explanations make it hard to trust or audit model decisions
+- **Lack of Indian focus** — Most tools are built for US markets with USD pricing and Western brokerage assumptions
+- **No transaction cost modeling** — Backtests ignore brokerage fees and slippage, making real-world performance much worse
+
+Without rigorous walk-forward validation and cost-aware execution, ML trading strategies fail when deployed with real money.
+
+---
+
+## Project Goals
+
+| # | Goal | Description |
+|---|------|-------------|
+| 1 | **Causal Walk-Forward Validation** | Train on past data, test on future data with chronological splits — no future leakage |
+| 2 | **Beginner-Friendly Interface** | Simple Mode with 4 controls so non-coders can use ML trading immediately |
+| 3 | **Explainable Predictions** | Every chart shows What, Why, How with verdicts and Indian market benchmarks |
+| 4 | **Transaction Cost Awareness** | Model brokerage fees (0.1-0.2%) and slippage so backtests reflect reality |
+| 5 | **Cross-Sectional Portfolios** | Combine multiple stocks into diversified ML portfolios with risk controls |
+| 6 | **SMA Benchmark Comparison** | Head-to-head ML vs rule-based SMA crossover on the same calendar window |
+
+---
+
+## Dashboard Pages
+
+The Streamlit app has **3 core views** accessible from the sidebar:
+
+### Stock Analysis
+Interactive technical analysis with candlestick charts, SMA overlays, RSI/MACD indicators, and buy/sell signal markers. Shows key metrics with Indian market benchmarks and a strategy vs buy-and-hold performance comparison.
+
+### ML Strategy (Walk-Forward)
+The main quantitative engine. Features include:
+- Chronological walk-forward validation with next-bar execution
+- Optional risk-free carry on flat cash positions
+- Head-to-head comparison vs SMA benchmark on same calendar window
+- Risk-Return bubble charts (CAGR vs Max Drawdown vs Sharpe)
+- Prediction distribution histograms
+- Rolling Information Coefficient (IC) tracking
+- Underwater drawdown curves
+- Feature importance with stability analysis
+- Cross-sectional ML portfolio construction
+
+### Portfolio Builder
+Multi-stock portfolio analysis with correlation heatmaps and combined risk metrics.
+
+---
+
+## Project Architecture
+
+```
+Data Sources (CSV)
+       |
+       v
++-------------------------------+
+|         ETL Pipeline          |
+|                               |
+|  CSV Ingestion -> Standardize |
+|    -> Feature Engineering     |
+|    -> Load to Database        |
++-------------------------------+
+       |
+       v
++-------------------------------+
+|      Database Layer           |
+|  SQL Server (production)      |
+|  SQLite (quick demo)          |
++-------------------------------+
+       |
+       v
++-------------------------------+
+|    ML Prediction Pipeline     |
+|                               |
+|  Feature Prep -> Walk-Forward |
+|    -> RandomForest/XGBoost    |
+|    -> Signal Generation       |
+|    -> Backtest with Costs     |
++-------------------------------+
+       |
+       v
++-------------------------------+
+|    Streamlit Dashboard        |
+|    (Multi-page App)           |
++-------------------------------+
+```
+
+---
+
+## ML Pipeline
+
+### 1. Data Ingestion (`etl/ingestion/csv_ingestion.py`)
+- Loads CSV files with OHLCV data for Indian stocks
+- Standardizes column names and data types
+- Archives processed files to prevent re-processing
+
+### 2. Feature Engineering (`etl/processing/gold_feature_engineering.py`)
+- Constructs 10+ technical indicators: SMA, RSI, MACD, daily returns
+- Creates causal target variables (forward-looking returns with proper lag)
+- Supports 1-day, 20-day, and 60-day prediction horizons
+
+### 3. Walk-Forward Validation (`dashboard/services/prediction_models/walk_forward.py`)
+- Single split: 70% train, 30% test (baseline)
+- Rolling expanding window: Train grows, test slides forward
+- Ensures predictions use only past data, no future leakage
+
+### 4. Model Training (`dashboard/services/prediction_models/random_forest.py`)
+- RandomForest: Robust ensemble, default for all users
+- XGBoost: Gradient boosting, optional if installed
+- Models trained on expanding windows, tested on held-out periods
+
+### 5. Signal Generation (`dashboard/services/prediction_models/ml_backtest.py`)
+- Static thresholds: Fixed prediction cutoff
+- Expanding quantiles: Dynamic thresholds based on rolling history
+- Discrete positions: 0/1/-1 (flat, long, short)
+- Confidence-weighted: Fractional exposure based on prediction strength
+
+### 6. Backtesting (`dashboard/services/prediction_models/ml_backtest.py`)
+- Next-bar execution with lagged positions
+- Transaction cost modeling (0.001 - 0.002 per trade)
+- Optional risk-free rate on cash (5% annual)
+- Strategy returns compared to buy-and-hold benchmark
+
+### 7. Evaluation (`dashboard/services/prediction_models/ml_backtest.py`)
+- CAGR, Sharpe ratio, Max Drawdown
+- Rolling Information Coefficient (IC)
+- IC half-life and decay analysis
+- Realized turnover metrics
+- Feature importance aggregation across folds
+
+---
+
+## Key Features Engineered
+
+### Technical Indicators
+| Feature | Description |
+|---------|-------------|
+| `sma_20` | 20-day simple moving average |
+| `sma_50` | 50-day simple moving average |
+| `rsi_14` | 14-day Relative Strength Index |
+| `macd_line` | MACD line (12-26 EMA difference) |
+| `macd_signal` | MACD signal line (9 EMA) |
+| `macd_hist` | MACD histogram |
+| `daily_return` | Percentage daily return |
+
+### Target Variables
+| Feature | Description |
+|---------|-------------|
+| `target` | Future return at selected horizon (1/20/60 days) |
+| `sym_mu` | Expanding causal mean return by symbol (panel mode) |
+
+### Strategy Features
+| Feature | Description |
+|---------|-------------|
+| `position` | Strategy position: 0 (flat), 1 (long), -1 (short) |
+| `strategy_return` | Net return after transaction costs |
+| `cum_strategy_return` | Cumulative compounded return |
+| `underwater` | Drawdown from peak (peak - current) / peak |
+
+---
+
+## Model Evaluation Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **CAGR** | Compound Annual Growth Rate — yearly return if strategy compounded |
+| **Sharpe Ratio** | Risk-adjusted return: return per unit of volatility |
+| **Max Drawdown** | Largest peak-to-trough decline (worst-case loss) |
+| **Information Coefficient (IC)** | Spearman correlation between prediction and realized return |
+| **IC Half-Life** | How many days before IC decays to half its value |
+| **Turnover** | Frequency of trading (high = more transaction costs) |
+| **Rolling IC** | Time-series of IC to check consistency over time |
+
+> **Note:** IC is the primary metric for model quality. IC > 0.05 indicates the model has genuine predictive power. IC > 0.10 is strong. Negative IC means the model is backwards — flip the signals.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Dashboard | Streamlit, Plotly |
-| Data Processing | Pandas, NumPy |
-| ML Models | Scikit-learn (RandomForest), optional XGBoost |
-| Database | SQL Server (production) or SQLite (demo) |
-| ETL | Python with Bronze/Silver/Gold pipeline |
-| Visualization | Plotly Dark Theme, Custom Chart Styling |
+| Category | Technology | Purpose |
+|----------|-----------|---------|
+| **Language** | Python 3.13+ | Core ML pipeline and dashboard |
+| **ML Models** | Scikit-learn (RandomForest), optional XGBoost | Time-series prediction |
+| **Data Processing** | Pandas, NumPy | Data manipulation and feature engineering |
+| **Visualization** | Plotly | Interactive charts and dark theme |
+| **Dashboard** | Streamlit | Multi-page web application |
+| **Database** | SQL Server (pyodbc), SQLite | Production and demo backends |
+| **ETL** | Custom Python pipeline | Bronze -> Silver -> Gold architecture |
+| **Config** | python-dotenv | Environment variable management |
 
 ---
 
-## Quick Start
+## Project Structure
 
-```bash
-# 1. Clone and setup
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-
-# 2. Configure database (see Database Setup below)
-# 3. Run ETL pipeline
-python -m etl.run_pipeline
-
-# 4. Launch dashboard
-streamlit run dashboard/main.py
+```
+Stock-Pulse/
+|
+├── dashboard/                    # Streamlit application
+│   ├── main.py                   # App entry point
+│   ├── database/                 # Database connections
+│   │   ├── connection.py         # SQL Server + SQLite support
+│   │   └── queries.py            # SQL queries
+│   ├── services/                 # Business logic
+│   │   ├── data_service.py       # Data fetching with error handling
+│   │   ├── portfolio_service.py  # Portfolio calculations
+│   │   └── prediction_models/    # ML pipeline
+│   │       ├── feature_prep.py   # Feature engineering
+│   │       ├── ml_backtest.py    # Backtesting engine
+│   │       ├── ml_portfolio.py   # Portfolio construction
+│   │       ├── random_forest.py  # RandomForest model
+│   │       ├── walk_forward.py   # Walk-forward validation
+│   │       ├── xgboost_model.py  # XGBoost model (optional)
+│   │       └── cross_sectional_ml.py  # Multi-stock panel
+│   ├── views/                    # Dashboard pages
+│   │   ├── stock_analysis.py     # Technical analysis view
+│   │   └── ml_strategy.py        # ML strategy view
+│   ├── styles/                   # Chart themes
+│   │   ├── chart_theme.py        # Plotly theme
+│   │   └── tokens.py             # Color tokens
+│   └── assets/                   # Logo and images
+│
+├── etl/                          # Data pipeline
+│   ├── ingestion/                # CSV loading
+│   ├── processing/               # Feature engineering
+│   │   ├── gold_feature_engineering.py
+│   │   └── silver_standardization.py
+│   ├── storage/                  # Database writer
+│   └── run_pipeline.py           # ETL orchestrator
+│
+├── data_sources/                 # Raw CSV files
+│   ├── incoming_csv/             # New CSV files
+│   └── processed_archive/        # Processed files
+│
+├── tests/                        # Unit tests
+│   ├── test_prediction_models.py
+│   └── test_gold_feature_engineering.py
+│
+├── docs/                         # Documentation
+│   ├── architecture_diagram.png
+│   └── generate_architecture.py
+│
+├── configuration/                # Config files
+│   └── .env                      # Environment variables
+│
+├── warehouse/                    # SQL schemas
+│   ├── schema_definitions/
+│   └── procedures/
+│
+├── requirements.txt              # Python dependencies
+└── README.md                     # This file
 ```
 
-Open browser at `http://localhost:8501`
-
 ---
 
-## Database Setup
+## Setup & Installation
 
-### Option A: SQL Server (Production)
+### Prerequisites
+- Python 3.13 or higher
+- pip
+- SQL Server (optional, for production) or SQLite (for demo)
 
+### 1. Clone the repository
+```bash
+git clone https://github.com/ankit-bind/Stock-Pulse.git
+cd Stock-Pulse
+```
+
+### 2. Create and activate a virtual environment
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure database
+
+**Option A: SQL Server (Production)**
 1. Ensure SQL Server is running (`localhost\SQLEXPRESS`)
-2. Configure `configuration/.env`:
+2. Update `configuration/.env`:
    ```
    DB_SERVER=localhost\SQLEXPRESS
    DB_NAME=StockPulse
    DB_DRIVER=ODBC+Driver+17+for+SQL+Server
    DB_TRUSTED_CONNECTION=yes
    ```
-3. Run ETL pipeline: `python -m etl.run_pipeline`
+3. Run ETL: `python -m etl.run_pipeline`
 
-### Option B: SQLite (Quick Demo)
-
+**Option B: SQLite (Quick Demo)**
 1. Set `USE_SQLITE=true` in `configuration/.env`
-2. Run ETL pipeline: `python -m etl.run_pipeline`
-3. No SQL Server required - perfect for quick demos and testing
+2. Run ETL: `python -m etl.run_pipeline`
+3. No SQL Server required
 
-> Configure database paths as required for your environment. Do not commit secrets.
-
----
-
-## Dashboard Views
-
-### 1. Stock Analysis
-- Interactive candlestick charts with SMA overlays
-- Buy/Sell signal markers on chart
-- RSI, MACD technical indicators
-- Strategy vs Buy-and-Hold performance comparison
-- Key metrics with Indian market benchmarks
-
-### 2. ML Strategy (Walk-Forward)
-- Chronological validation with next-bar execution
-- Optional risk-free carry on flat cash
-- Head-to-head comparison vs SMA benchmark
-- Cross-sectional ML portfolio construction
-- Every chart includes: What, Why, How, Verdict, and Benchmarks
-
-### 3. Portfolio Builder
-- Multi-stock analysis and comparison
-- Correlation heatmaps
-- Portfolio-level risk metrics
-
----
-
-## How to Read Results
-
-### Key Metrics
-| Metric | Meaning | Good Range |
-|--------|---------|-----------|
-| **CAGR** | Annualized return | > 15% beats Nifty 50 |
-| **Sharpe** | Risk-adjusted return | > 1.0 is good, > 1.5 is excellent |
-| **Max DD** | Worst peak-to-trough loss | < 20% is conservative, < 30% is manageable |
-| **IC** | Information Coefficient (prediction accuracy) | > 0.05 is good, > 0.10 is strong |
-| **Turnover** | Trading frequency | Lower = less cost drag |
-
-### Benchmarks (Indian Market)
-- Nifty 50 long-term CAGR: ~12%
-- Nifty 50 typical max drawdown: ~30-35%
-- Good ML strategy: CAGR > 15%, Sharpe > 1.0, Max DD < 25%
-
-### Reading Charts
-Every chart in the ML Strategy view includes:
-- **What** - What the chart shows
-- **Why** - Why it matters for decision making
-- **How** - How to interpret the results
-- **Verdict** - Green/Yellow/Red indicator of quality
-- **Benchmarks** - Comparison against Indian market standards
-
----
-
-## Architecture
-
-![Stock-Pulse Architecture](docs/architecture_diagram.png)
-
-**Architecture Overview:**
-1. **Data Sources** - CSV files with OHLCV data for Indian stocks
-2. **ETL Pipeline** - Bronze -> Silver -> Gold layers with standardization
-3. **Database** - SQL Server (production) or SQLite (local demo)
-4. **Feature Engineering** - Technical indicators (RSI, MACD, SMA), causal targets
-5. **ML Prediction** - RandomForest / XGBoost with walk-forward validation
-6. **Portfolio** - Equal-weight, inverse-vol, cost-aware execution, beta-neutral options
-7. **Dashboard** - Streamlit with Plotly visualizations, simple and advanced modes
-
----
-
-## Screenshots
-
-```markdown
-![Stock Analysis](docs/screenshots/stock_analysis.png)
-![ML Strategy](docs/screenshots/ml_strategy.png)
-![Portfolio](docs/screenshots/portfolio.png)
+### 5. Run ETL pipeline
+```bash
+python -m etl.run_pipeline
 ```
 
 ---
 
-## Running Tests
+## Running the App
 
 ```bash
-# Run prediction model tests
-python -m unittest tests.test_prediction_models -v
-
-# Run feature engineering tests
-python -m unittest tests.test_gold_feature_engineering -v
+streamlit run dashboard/main.py
 ```
+
+The dashboard will open at `http://localhost:8501`.
+
+> **Database required:** The dashboard reads from the database populated by the ETL pipeline. Run `python -m etl.run_pipeline` first.
 
 ---
 
-*This project is for research and educational purposes. It is not investment advice.*
+## Configuration
+
+All pipeline behavior is controlled via environment variables in `configuration/.env`:
+
+| Variable | Purpose |
+|----------|---------|
+| `DB_SERVER` | SQL Server instance name |
+| `DB_NAME` | Database name |
+| `DB_DRIVER` | ODBC driver |
+| `DB_TRUSTED_CONNECTION` | Windows auth (yes/no) |
+| `USE_SQLITE` | Use SQLite instead of SQL Server (true/false) |
+
+To change prediction horizons or model parameters, edit the code in `dashboard/views/ml_strategy.py`.
+
+---
+
+## Dashboard Usage
+
+### For Beginners
+1. Select **Simple Mode** in the sidebar
+2. Choose a **Quick Preset**: Beginner (Easy), Balanced (Standard), or Aggressive (Pro)
+3. Select a stock (e.g., TCS.NS)
+4. Click **Run**
+5. Read the chart explanations (What/Why/How) below each visualization
+
+### For Advanced Users
+1. Select **Advanced Mode** in the sidebar
+2. Configure: model, horizon, walk-forward mode, thresholds, position style
+3. Adjust transaction costs and risk-free rate
+4. Run cross-sectional portfolio across multiple stocks
+5. Export results to CSV
+
+---
+
+## Results (Example)
+
+Tested on **TCS.NS** with 2,776 rows of historical data:
+
+| Preset | Horizon | Signal | CAGR | Max DD | Sharpe | IC |
+|--------|---------|--------|------|--------|--------|-----|
+| Beginner | 60-day | Long only | 6.82% | -33.09% | 0.03 | 0.0724 |
+| Balanced | 20-day | Long/Short | 5.86% | -29.46% | 0.02 | 0.0278 |
+| Aggressive | 20-day | Long/Short | 2.19% | -31.41% | 0.01 | - |
+
+> **Beginner preset (60-day) outperformed Buy & Hold (6.82% vs 4.70%) with the highest IC (0.0724), indicating genuine predictive power.**
+
+---
+
+## Author
+
+**Ankit**
+- GitHub: https://github.com/ankit-bind
+- Project: Stock-Pulse
+- Version: 1.0
+
+---
+
+> **Disclaimer:** This application is for educational and research purposes only. All predictions are probabilistic estimates based on historical data patterns. Past performance does not guarantee future results. Trading involves substantial risk of loss. Please consult a financial advisor before making investment decisions.
