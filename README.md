@@ -480,8 +480,7 @@ Walk-forward backtesting with cumulative returns, risk metrics, and chart explan
 
 ![ML Strategy](docs/screenshots/ml_strategy.png)
 
-### Portfolio Builder
-Multi-stock portfolio analysis with correlation heatmaps.
+
 
 ![Portfolio](docs/screenshots/portfolio.png)
 
