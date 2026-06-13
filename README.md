@@ -11,6 +11,7 @@
 - [Project Goals](#project-goals)
 - [Dashboard Pages](#dashboard-pages)
 - [Project Architecture](#project-architecture)
+- [Data Warehouse Architecture](#data-warehouse-architecture)
 - [ML Pipeline](#ml-pipeline)
 - [Key Features Engineered](#key-features-engineered)
 - [Model Evaluation Metrics](#model-evaluation-metrics)
@@ -92,14 +93,22 @@ Data Sources (CSV)
 +-------------------------------+
 |         ETL Pipeline          |
 |                               |
-|  CSV Ingestion -> Standardize |
-|    -> Feature Engineering     |
-|    -> Load to Database        |
+|  CSV Ingestion                |
+|       |                       |
+|       v                       |
+|  Bronze Layer (Raw Data)      |
+|       |                       |
+|       v                       |
+|  Silver Layer (Standardized)  |
+|       |                       |
+|       v                       |
+|  Gold Layer (Features)        |
 +-------------------------------+
        |
        v
 +-------------------------------+
-|      Database Layer           |
+|      Data Warehouse           |
+|                               |
 |  SQL Server (production)      |
 |  SQLite (quick demo)          |
 +-------------------------------+
@@ -123,6 +132,20 @@ Data Sources (CSV)
 
 ---
 
+## Data Warehouse Architecture
+
+Stock-Pulse uses a **Medallion Architecture** (Bronze/Silver/Gold) implemented in SQL Server or SQLite:
+
+| Layer | Name | Purpose | Schema |
+|-------|------|---------|--------|
+| **Bronze** | Raw Data | Stores raw CSV data as-is | `bronze_schema.sql` |
+| **Silver** | Standardized | Cleaned, deduplicated, aligned types | `silver_schema.sql` |
+| **Gold** | Features | Technical indicators + ML targets | `gold_schema.sql` |
+
+Stored procedures handle the transitions:
+- `load_bronze_to_silver.sql` — Cleans and standardizes raw data
+- `load_silver_to_gold.sql` — Engineers features and targets
+
 ## ML Pipeline
 
 ### 1. Data Ingestion (`etl/ingestion/csv_ingestion.py`)
@@ -130,34 +153,48 @@ Data Sources (CSV)
 - Standardizes column names and data types
 - Archives processed files to prevent re-processing
 
-### 2. Feature Engineering (`etl/processing/gold_feature_engineering.py`)
+### 2. Bronze Layer (Raw Data)
+- Stores raw CSV data as-is in `warehouse/schema_definitions/bronze_schema.sql`
+- No transformations, just data landing
+
+### 3. Silver Layer (Standardized)
+- Standardizes data types, handles missing values
+- Removes duplicates, aligns columns
+- Schema: `warehouse/schema_definitions/silver_schema.sql`
+
+### 4. Gold Layer (Features)
 - Constructs 10+ technical indicators: SMA, RSI, MACD, daily returns
 - Creates causal target variables (forward-looking returns with proper lag)
 - Supports 1-day, 20-day, and 60-day prediction horizons
+- Schema: `warehouse/schema_definitions/gold_schema.sql`
 
-### 3. Walk-Forward Validation (`dashboard/services/prediction_models/walk_forward.py`)
+### 5. Data Warehouse Load
+- Loads Gold layer data into SQL Server or SQLite
+- Stored procedures: `warehouse/procedures/load_bronze_to_silver.sql` and `load_silver_to_gold.sql`
+
+### 6. Walk-Forward Validation (`dashboard/services/prediction_models/walk_forward.py`)
 - Single split: 70% train, 30% test (baseline)
 - Rolling expanding window: Train grows, test slides forward
 - Ensures predictions use only past data, no future leakage
 
-### 4. Model Training (`dashboard/services/prediction_models/random_forest.py`)
+### 7. Model Training (`dashboard/services/prediction_models/random_forest.py`)
 - RandomForest: Robust ensemble, default for all users
 - XGBoost: Gradient boosting, optional if installed
 - Models trained on expanding windows, tested on held-out periods
 
-### 5. Signal Generation (`dashboard/services/prediction_models/ml_backtest.py`)
+### 8. Signal Generation (`dashboard/services/prediction_models/ml_backtest.py`)
 - Static thresholds: Fixed prediction cutoff
 - Expanding quantiles: Dynamic thresholds based on rolling history
 - Discrete positions: 0/1/-1 (flat, long, short)
 - Confidence-weighted: Fractional exposure based on prediction strength
 
-### 6. Backtesting (`dashboard/services/prediction_models/ml_backtest.py`)
+### 9. Backtesting (`dashboard/services/prediction_models/ml_backtest.py`)
 - Next-bar execution with lagged positions
 - Transaction cost modeling (0.001 - 0.002 per trade)
 - Optional risk-free rate on cash (5% annual)
 - Strategy returns compared to buy-and-hold benchmark
 
-### 7. Evaluation (`dashboard/services/prediction_models/ml_backtest.py`)
+### 10. Evaluation (`dashboard/services/prediction_models/ml_backtest.py`)
 - CAGR, Sharpe ratio, Max Drawdown
 - Rolling Information Coefficient (IC)
 - IC half-life and decay analysis
@@ -278,9 +315,14 @@ Stock-Pulse/
 ├── configuration/                # Config files
 │   └── .env                      # Environment variables
 │
-├── warehouse/                    # SQL schemas
+├── warehouse/                    # Data Warehouse (Medallion Architecture)
 │   ├── schema_definitions/
+│   │   ├── bronze_schema.sql     # Raw data layer
+│   │   ├── silver_schema.sql     # Standardized layer
+│   │   └── gold_schema.sql       # Feature-engineered layer
 │   └── procedures/
+│       ├── load_bronze_to_silver.sql
+│       └── load_silver_to_gold.sql
 │
 ├── requirements.txt              # Python dependencies
 └── README.md                     # This file
@@ -317,7 +359,7 @@ pip install -r requirements.txt
 
 ### 4. Configure database
 
-**Option A: SQL Server (Production)**
+**Option A: SQL Server (Production Data Warehouse)**
 1. Ensure SQL Server is running (`localhost\SQLEXPRESS`)
 2. Update `configuration/.env`:
    ```
@@ -328,15 +370,20 @@ pip install -r requirements.txt
    ```
 3. Run ETL: `python -m etl.run_pipeline`
 
-**Option B: SQLite (Quick Demo)**
+**Option B: SQLite (Quick Demo Warehouse)**
 1. Set `USE_SQLITE=true` in `configuration/.env`
 2. Run ETL: `python -m etl.run_pipeline`
-3. No SQL Server required
+3. No SQL Server required — creates local SQLite data warehouse
 
-### 5. Run ETL pipeline
+### 5. Run ETL Pipeline
 ```bash
 python -m etl.run_pipeline
 ```
+
+This executes the full Medallion Architecture:
+- **Bronze**: Raw CSV data loaded as-is
+- **Silver**: Standardized, cleaned, and deduplicated
+- **Gold**: Feature-engineered with technical indicators and targets
 
 ---
 
